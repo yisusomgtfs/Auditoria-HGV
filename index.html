@@ -7,7 +7,6 @@
     <title>HGV Auditoría Enterprise</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- CONEXIÓN DE SERVICE WORKER PARA MODO OFFLINE -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -139,7 +138,6 @@
 <body>
 <div id="night-light-filter"></div>
 
-<!-- MODAL DE RECUPERACIÓN ORIGINAL -->
 <div id="recovery-modal" class="modal-overlay">
     <div class="modal-content">
         <h3 style="margin-top:0;">Recuperar Acceso</h3>
@@ -155,7 +153,6 @@
     </div>
 </div>
 
-<!-- MODAL UNIVERSAL PARA AUDITORÍA DE ACCIONES -->
 <div id="universal-modal" class="modal-overlay">
     <div class="modal-content">
         <h3 id="um-titulo" style="margin-top:0;">Título</h3>
@@ -167,7 +164,6 @@
     </div>
 </div>
 
-<!-- MODAL CUSTOMIZADO DE LIMPIEZA BLINDADA -->
 <div id="limpieza-modal" class="modal-overlay">
     <div class="modal-content">
         <h3 id="lm-titulo" style="margin-top:0;">⚠️ Nueva Cirugía</h3>
@@ -324,7 +320,7 @@
 </div>
 <div id="toast">Notificación</div>
 <script>
-    // --- MOTOR CRIPTOGRÁFICO V8.1 ---
+    // --- MOTOR CRIPTOGRÁFICO V1.0.1 ---
     const SALT = "HGV_Laparoscopia_Sec_2026";
     
     async function hashSHA256(text) {
@@ -339,11 +335,11 @@
         }
     }
 
-        async function initSecurity() {
+    async function initSecurity() {
         const hashPorDefectoPin = await hashSHA256('2026');
         const hashPorDefectoPalabra = await hashSHA256('HGV');
         
-        // PARCHE: Solo inyecta los valores por defecto si la memoria está vacía.
+        // PARCHE APLICADO: Solo inyecta el default si está completamente vacío.
         if(!localStorage.getItem('pin_hash')) { 
             localStorage.setItem('pin_hash', hashPorDefectoPin); 
         }
@@ -352,7 +348,6 @@
         }
     }
     initSecurity();
-
 
     // --- MOTOR INDEXED-DB ---
     const dbName = "HGVAuditoriaDB";
@@ -402,20 +397,16 @@
         if(inputHash === localStorage.getItem('pin_hash')) { document.getElementById('login-screen').style.opacity = '0'; setTimeout(accederApp, 400); } else { document.getElementById('login-error').style.display = 'block'; document.getElementById('pin-input').value = ''; } 
     }
     
-    // --- MOTOR BIOMÉTRICO WEBAUTHN (GRADO PRODUCCIÓN V8.2) ---
+    // --- MOTOR BIOMÉTRICO WEBAUTHN ---
     async function intentarBiometria() {
         if (!window.PublicKeyCredential) { showToast("❌ Biometría no soportada por el navegador."); return; }
-
         try {
             const hasCredential = localStorage.getItem('hgv_credential_id');
-
             if (!hasCredential) {
-                // Fase de Registro Inicial
                 confirmarAccion('🔒 Configuración Biométrica', 'No hay huellas asociadas al sistema HGV. ¿Desea vincular el lector de huellas de su CUBOT ahora?', 'Vincular Huella', '#27ae60', async () => {
                     try {
                         const challenge = new Uint8Array(32); crypto.getRandomValues(challenge);
                         const userID = new Uint8Array(16); crypto.getRandomValues(userID);
-
                         const credential = await navigator.credentials.create({
                             publicKey: {
                                 challenge: challenge,
@@ -426,7 +417,6 @@
                                 timeout: 60000
                             }
                         });
-
                         const rawIdArray = Array.from(new Uint8Array(credential.rawId));
                         const rawIdBase64 = btoa(String.fromCharCode.apply(null, rawIdArray));
                         localStorage.setItem('hgv_credential_id', rawIdBase64);
@@ -435,14 +425,11 @@
                 });
                 return;
             }
-
-            // Fase de Validación (Login normal)
             const challenge = new Uint8Array(32); crypto.getRandomValues(challenge);
             const rawIdBase64 = localStorage.getItem('hgv_credential_id');
             const binaryString = atob(rawIdBase64);
             const credentialId = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) { credentialId[i] = binaryString.charCodeAt(i); }
-
             const assertion = await navigator.credentials.get({
                 publicKey: {
                     challenge: challenge,
@@ -452,7 +439,6 @@
                     timeout: 60000
                 }
             });
-
             if (assertion) {
                 document.getElementById('login-screen').style.opacity = '0';
                 setTimeout(accederApp, 400);
@@ -460,13 +446,49 @@
         } catch (err) { console.error(err); showToast("❌ Huella no reconocida. Use el PIN."); }
     }
 
-    // Modal de Recuperación y Ajustes
+    // Modal de Recuperación y Ajustes PARCHEADO
     let recoveryStage = 0;
     function abrirRecuperacion() { document.getElementById('recovery-modal').style.display = 'flex'; document.getElementById('recovery-word-input').style.display = 'block'; document.getElementById('new-pin-section').style.display = 'none'; document.getElementById('btn-recovery-action').innerText = "Validar Palabra"; document.getElementById('recovery-error').style.display = 'none'; document.getElementById('recovery-word-input').value = ''; recoveryStage = 0; }
     function cerrarRecuperacion() { document.getElementById('recovery-modal').style.display = 'none'; }
-    async function validarRecuperacion() { const errorMsg = document.getElementById('recovery-error'); if(recoveryStage === 0) { const intentoHash = await hashSHA256(document.getElementById('recovery-word-input').value); if(intentoHash === localStorage.getItem('palabra_hash')) { document.getElementById('recovery-word-input').style.display = 'none'; document.getElementById('new-pin-section').style.display = 'block'; document.getElementById('btn-recovery-action').innerText = "Guardar Nuevo PIN"; errorMsg.style.display = 'none'; recoveryStage = 1; } else { errorMsg.innerText = "Palabra Incorrecta."; errorMsg.style.display = 'block'; } } else { const nuevoPin = document.getElementById('new-pin-recovery').value; if(nuevoPin.length >= 4) { localStorage.setItem('pin_hash', await hashSHA256(nuevoPin)); showToast("PIN actualizado de forma segura."); cerrarRecuperacion(); } else { errorMsg.innerText = "El PIN debe tener 4 números."; errorMsg.style.display = 'block'; } } }
+    
+    async function validarRecuperacion() { 
+        const errorMsg = document.getElementById('recovery-error'); 
+        if(recoveryStage === 0) { 
+            const inputLimpio = document.getElementById('recovery-word-input').value.trim().toUpperCase();
+            const intentoHash = await hashSHA256(inputLimpio); 
+            if(intentoHash === localStorage.getItem('palabra_hash')) { 
+                document.getElementById('recovery-word-input').style.display = 'none'; 
+                document.getElementById('new-pin-section').style.display = 'block'; 
+                document.getElementById('btn-recovery-action').innerText = "Guardar Nuevo PIN"; 
+                errorMsg.style.display = 'none'; 
+                recoveryStage = 1; 
+            } else { 
+                errorMsg.innerText = "Palabra Incorrecta."; 
+                errorMsg.style.display = 'block'; 
+            } 
+        } else { 
+            const nuevoPin = document.getElementById('new-pin-recovery').value; 
+            if(nuevoPin.length >= 4) { 
+                localStorage.setItem('pin_hash', await hashSHA256(nuevoPin)); 
+                showToast("PIN actualizado de forma segura."); 
+                cerrarRecuperacion(); 
+            } else { 
+                errorMsg.innerText = "El PIN debe tener 4 números."; 
+                errorMsg.style.display = 'block'; 
+            } 
+        } 
+    }
+    
     async function cambiarPIN() { const p = document.getElementById('ajustes-nuevo-pin').value; if(p.length >= 4) { localStorage.setItem('pin_hash', await hashSHA256(p)); showToast("✔ PIN Encriptado y Guardado"); document.getElementById('ajustes-nuevo-pin').value=''; } else showToast("❌ El PIN debe tener 4 dígitos"); }
-    async function guardarPalabra() { const w = document.getElementById('ajustes-palabra').value; if(w.length >= 3) { localStorage.setItem('palabra_hash', await hashSHA256(w)); showToast("✔ Palabra Encriptada y Guardada"); document.getElementById('ajustes-palabra').value=''; } else showToast("❌ Palabra muy corta"); }
+    
+    async function guardarPalabra() { 
+        const w = document.getElementById('ajustes-palabra').value.trim().toUpperCase(); 
+        if(w.length >= 3) { 
+            localStorage.setItem('palabra_hash', await hashSHA256(w)); 
+            showToast("✔ Palabra Encriptada y Guardada"); 
+            document.getElementById('ajustes-palabra').value=''; 
+        } else showToast("❌ Palabra muy corta"); 
+    }
     
     document.getElementById('pin-input').addEventListener('keypress', e => { if (e.key === 'Enter') verificarPIN(); });
     
