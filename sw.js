@@ -1,47 +1,32 @@
-const CACHE_NAME = 'hgv-auditoria-v8-2-enterprise';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'hgv-v1-0-3';
+const ASSETS = [
     './',
     './index.html',
     './manifest.json',
     'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
 ];
-    'icon-192.png',
-    'icon-512.png'
-];
 
-// Fase 1: Instalación y Captura de Archivos
+// Instalación: Carga obligatoria de archivos
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open(CACHE_NAME)
-        .then(cache => {
-            console.log('Caché clínico asegurado para operación offline.');
-            return cache.addAll(ASSETS_TO_CACHE);
-        })
+        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
     );
 });
 
-// Fase 2: Estrategia Cache-First (Intercepta las peticiones de red)
+// Intercepción: Prioridad a lo guardado en el teléfono
 self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.match(event.request)
-        .then(response => {
-            // Si el archivo está en la memoria del teléfono, lo entrega instantáneamente
-            if (response) { return response; }
-            // Si no está, lo busca en internet
-            return fetch(event.request);
+        caches.match(event.request).then(response => {
+            return response || fetch(event.request);
         })
     );
 });
 
-// Fase 3: Mantenimiento (Elimina versiones viejas cuando actualicemos el código futuro)
+// Activación: Limpieza de versiones viejas
 self.addEventListener('activate', event => {
     event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cache => {
-                    if (cache !== CACHE_NAME) { return caches.delete(cache); }
-                })
-            );
-        })
+        caches.keys().then(keys => Promise.all(
+            keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        ))
     );
 });
