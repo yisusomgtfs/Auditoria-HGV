@@ -35,13 +35,31 @@
     opacity: 1;
 }
 
+/* Contenedor padre de las vistas */
+#app-content {
+    position: relative;
+    overflow: hidden; /* Evita que las animaciones causen barras laterales */
+    min-height: 100vh;
+}
+
 .view {
-    transition: opacity var(--duration-standard) ease, transform var(--duration-standard) var(--ease-professional);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    transform: translateX(20px); /* Comienza un poco a la derecha */
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none; /* No se puede tocar mientras se mueve */
 }
 
 .view.active {
-    animation: professionalSlideIn var(--duration-standard) var(--ease-professional) forwards;
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+    z-index: 1;
 }
+
 
 @keyframes professionalSlideIn {
     from { opacity: 0; transform: translateY(30px); }
