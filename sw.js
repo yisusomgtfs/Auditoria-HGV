@@ -3,7 +3,8 @@ const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './manifest.json',
-    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+];
     'icon-192.png',
     'icon-512.png'
 ];
