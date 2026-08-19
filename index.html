@@ -459,6 +459,74 @@ button:active {
         }
     }
     initSecurity();
+    
+        // --- MOTOR DEL CRONÓMETRO Y SELLOS DE TIEMPO ---
+    let cronometroInterval;
+    let tiempoInicioCx = 0;
+
+    function validarRelojHardware() { 
+        if (new Date().getFullYear() < 2026) { showToast("❌ ALERTA: Reloj desincronizado."); return false; } 
+        return true; 
+    }
+
+    function marcarHoraListo() { 
+        if(!validarRelojHardware()) return; 
+        const el = document.getElementById('t-listo'); 
+        if(el.value !== '') { showToast("Sello bloqueado."); return; } 
+        const now = new Date(); 
+        el.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); 
+        el.style.color='#27ae60'; el.style.fontWeight='bold'; 
+        guardarBorradorAutomatico(); 
+    }
+
+    function marcarHoraInicio() { 
+        if(!validarRelojHardware()) return; 
+        if(document.getElementById('t-listo').value === '') { showToast("❌ Marque Llegada primero."); return; } 
+        const el = document.getElementById('t-inicio'); 
+        if(el.value !== '') { showToast("Sello de Inicio bloqueado."); return; } 
+        
+        const now = new Date(); 
+        el.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); 
+        el.style.color='#2980b9'; el.style.fontWeight='bold'; 
+        
+        // Arrancar Cronómetro
+        document.getElementById('panel-cronometro').style.display = 'block';
+        tiempoInicioCx = Date.now();
+        cronometroInterval = setInterval(actualizarCronometro, 1000);
+        
+        guardarBorradorAutomatico(); 
+    }
+
+    function actualizarCronometro() {
+        const ahora = Date.now();
+        const diff = ahora - tiempoInicioCx;
+        const horas = String(Math.floor(diff / 3600000)).padStart(2, '0');
+        const minutos = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+        const segundos = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+        
+        const tiempoFormateado = `${horas}:${minutos}:${segundos}`;
+        document.getElementById('cronometro-display').innerText = tiempoFormateado;
+        document.getElementById('tiempo-total-cx').value = tiempoFormateado;
+    }
+
+    function marcarHoraFin() { 
+        if(!validarRelojHardware()) return; 
+        if(document.getElementById('t-inicio').value === '') { showToast("❌ Marque Inicio primero."); return; } 
+        const el = document.getElementById('t-fin'); 
+        if(el.value !== '') { showToast("Sello de Fin bloqueado."); return; } 
+        
+        const now = new Date(); 
+        el.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); 
+        el.style.color='#c0392b'; el.style.fontWeight='bold'; 
+        
+        // Detener Cronómetro y cambiar color a rojo/alerta
+        if(cronometroInterval) clearInterval(cronometroInterval);
+        document.getElementById('cronometro-display').style.color = '#e74c3c';
+        document.getElementById('cronometro-display').style.textShadow = '0 0 5px rgba(231, 76, 60, 0.5)';
+        
+        guardarBorradorAutomatico(); 
+    }
+    
 
     // --- MOTOR INDEXED-DB ---
     const dbName = "HGVAuditoriaDB";
