@@ -308,12 +308,24 @@ button:active {
                     <input type="number" id="edad" placeholder="Auto / Manual" style="color:#2980b9; font-weight:bold;">
                 </div>
             </div>
-            <div class="section-title">I. TIEMPOS</div>
+                        <div class="section-title">I. TIEMPOS OPERATORIOS</div>
             <div class="row">
-                <div class="col"><label>Fecha</label><input type="text" id="fecha" readonly></div>
+                <div class="col" style="flex:1;"><label>Inicio Anestesia</label><input type="time" id="t-anestesia" onchange="guardarBorradorAutomatico()"></div>
+                <div class="col" style="flex:1;"><label>Fecha</label><input type="text" id="fecha" readonly></div>
+            </div>
+            <div class="row">
                 <div class="col"><label>Técnico Listo</label><input type="text" id="t-listo" readonly onclick="marcarHoraListo();" placeholder="Toque aquí"></div>
-                <div class="col"><label>Inicio Cirugía</label><input type="text" id="t-inicio" readonly onclick="marcarHoraInicio();" placeholder="Toque al iniciar"></div>
-                <div class="col"><label>Fin Cirugía</label><input type="text" id="t-fin" readonly onclick="marcarHoraFin();" placeholder="Toque al finalizar"></div>
+                <div class="col"><label>Inicio Cx</label><input type="text" id="t-inicio" readonly onclick="marcarHoraInicio();" placeholder="Toque al iniciar"></div>
+                <div class="col"><label>Fin Cx</label><input type="text" id="t-fin" readonly onclick="marcarHoraFin();" placeholder="Toque al finalizar"></div>
+            </div>
+            
+            <!-- PANEL DEL CRONÓMETRO TÁCTICO -->
+            <div class="row" id="panel-cronometro" style="display: none; margin-top: 5px;">
+                <div class="col-full" style="text-align: center; background: #000; border-radius: 8px; padding: 15px; border: 2px solid #3498db; box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);">
+                    <label style="color: #3498db; font-size: 0.8em; letter-spacing: 2px;">TIEMPO QUIRÚRGICO TRANSCURRIDO</label>
+                    <div id="cronometro-display" style="font-size: 2.8em; font-family: monospace; color: #2ecc71; font-weight: bold; letter-spacing: 3px; margin-top: 5px; text-shadow: 0 0 5px rgba(46, 204, 113, 0.5);">00:00:00</div>
+                    <input type="hidden" id="tiempo-total-cx">
+                </div>
             </div>
             <div class="section-title">II. SUPERVISIÓN ADSCRITO</div>
             <div class="row">
