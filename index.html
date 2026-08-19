@@ -339,13 +339,20 @@
         }
     }
 
-    async function initSecurity() {
+        async function initSecurity() {
         const hashPorDefectoPin = await hashSHA256('2026');
         const hashPorDefectoPalabra = await hashSHA256('HGV');
-        if(!localStorage.getItem('pin_hash') || localStorage.getItem('pin_hash') !== hashPorDefectoPin) { localStorage.setItem('pin_hash', hashPorDefectoPin); }
-        if(!localStorage.getItem('palabra_hash') || localStorage.getItem('palabra_hash') !== hashPorDefectoPalabra) { localStorage.setItem('palabra_hash', hashPorDefectoPalabra); }
+        
+        // PARCHE: Solo inyecta los valores por defecto si la memoria está vacía.
+        if(!localStorage.getItem('pin_hash')) { 
+            localStorage.setItem('pin_hash', hashPorDefectoPin); 
+        }
+        if(!localStorage.getItem('palabra_hash')) { 
+            localStorage.setItem('palabra_hash', hashPorDefectoPalabra); 
+        }
     }
     initSecurity();
+
 
     // --- MOTOR INDEXED-DB ---
     const dbName = "HGVAuditoriaDB";
