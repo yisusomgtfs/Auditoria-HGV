@@ -18,6 +18,41 @@
     </script>
     
     <style>
+        /* --- MOTOR DE ANIMACIÓN PROFESIONAL --- */
+:root {
+    --ease-professional: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --duration-standard: 0.4s;
+}
+
+.modal-content {
+    transition: all var(--duration-standard) var(--ease-professional);
+    transform: scale(0.9);
+    opacity: 0;
+}
+
+.modal-overlay[style*="display: flex"] .modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.view {
+    transition: opacity var(--duration-standard) ease, transform var(--duration-standard) var(--ease-professional);
+}
+
+.view.active {
+    animation: professionalSlideIn var(--duration-standard) var(--ease-professional) forwards;
+}
+
+@keyframes professionalSlideIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+button:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.1s ease;
+}
+        
         * { box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: #ecf0f1; margin: 0; padding: 0; color: #333; overflow-x: hidden; transition: background-color 0.4s ease, color 0.4s ease; }
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
