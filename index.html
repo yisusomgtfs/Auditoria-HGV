@@ -324,7 +324,7 @@
 </div>
 <div id="toast">Notificación</div>
 <script>
-    // --- MOTOR CRIPTOGRÁFICO V8.1 (RESILIENCIA PARA WEBVIEWS LOCALES) ---
+    // --- MOTOR CRIPTOGRÁFICO V8.1 ---
     const SALT = "HGV_Laparoscopia_Sec_2026";
     
     async function hashSHA256(text) {
@@ -342,17 +342,12 @@
     async function initSecurity() {
         const hashPorDefectoPin = await hashSHA256('2026');
         const hashPorDefectoPalabra = await hashSHA256('HGV');
-        
-        if(!localStorage.getItem('pin_hash') || localStorage.getItem('pin_hash') !== hashPorDefectoPin) { 
-            localStorage.setItem('pin_hash', hashPorDefectoPin); 
-        }
-        if(!localStorage.getItem('palabra_hash') || localStorage.getItem('palabra_hash') !== hashPorDefectoPalabra) { 
-            localStorage.setItem('palabra_hash', hashPorDefectoPalabra); 
-        }
+        if(!localStorage.getItem('pin_hash') || localStorage.getItem('pin_hash') !== hashPorDefectoPin) { localStorage.setItem('pin_hash', hashPorDefectoPin); }
+        if(!localStorage.getItem('palabra_hash') || localStorage.getItem('palabra_hash') !== hashPorDefectoPalabra) { localStorage.setItem('palabra_hash', hashPorDefectoPalabra); }
     }
     initSecurity();
 
-    // --- MOTOR INDEXED-DB (Almacenamiento Ilimitado + Borrador) ---
+    // --- MOTOR INDEXED-DB ---
     const dbName = "HGVAuditoriaDB";
     function openDB() {
         return new Promise((resolve, reject) => {
@@ -367,96 +362,20 @@
         });
     }
     
-    async function guardarRegistroBD(registro) {
-        const db = await openDB();
-        return new Promise((res, rej) => {
-            const tx = db.transaction('registros', 'readwrite');
-            tx.objectStore('registros').put(registro);
-            tx.oncomplete = res; tx.onerror = rej;
-        });
-    }
-    async function obtenerRegistrosBD() {
-        const db = await openDB();
-        return new Promise((res, rej) => {
-            const tx = db.transaction('registros', 'readonly');
-            const req = tx.objectStore('registros').getAll();
-            req.onsuccess = () => res(req.result.sort((a,b) => b.timestamp - a.timestamp));
-            req.onerror = rej;
-        });
-    }
-    async function borrarRegistroBD(id) {
-        const db = await openDB();
-        return new Promise((res, rej) => {
-            const tx = db.transaction('registros', 'readwrite');
-            tx.objectStore('registros').delete(id);
-            tx.oncomplete = res; tx.onerror = rej;
-        });
-    }
-    async function limpiarBD() {
-        const db = await openDB();
-        return new Promise((res, rej) => {
-            const tx = db.transaction('registros', 'readwrite');
-            tx.objectStore('registros').clear();
-            tx.oncomplete = res; tx.onerror = rej;
-        });
-    }
-
-    async function guardarBorradorBD(borrador) {
-        const db = await openDB();
-        return new Promise((res, rej) => {
-            const tx = db.transaction('borrador', 'readwrite');
-            tx.objectStore('borrador').put({id: 'draft_activo', data: borrador});
-            tx.oncomplete = res; tx.onerror = rej;
-        });
-    }
-    async function obtenerBorradorBD() {
-        const db = await openDB();
-        return new Promise((res, rej) => {
-            const tx = db.transaction('borrador', 'readonly');
-            const req = tx.objectStore('borrador').get('draft_activo');
-            req.onsuccess = () => res(req.result ? req.result.data : null);
-            req.onerror = rej;
-        });
-    }
-    async function eliminarBorradorBD() {
-        const db = await openDB();
-        return new Promise((res, rej) => {
-            const tx = db.transaction('borrador', 'readwrite');
-            tx.objectStore('borrador').delete('draft_activo');
-            tx.oncomplete = res; tx.onerror = rej;
-        });
-    }
+    async function guardarRegistroBD(registro) { const db = await openDB(); return new Promise((res, rej) => { const tx = db.transaction('registros', 'readwrite'); tx.objectStore('registros').put(registro); tx.oncomplete = res; tx.onerror = rej; }); }
+    async function obtenerRegistrosBD() { const db = await openDB(); return new Promise((res, rej) => { const tx = db.transaction('registros', 'readonly'); const req = tx.objectStore('registros').getAll(); req.onsuccess = () => res(req.result.sort((a,b) => b.timestamp - a.timestamp)); req.onerror = rej; }); }
+    async function borrarRegistroBD(id) { const db = await openDB(); return new Promise((res, rej) => { const tx = db.transaction('registros', 'readwrite'); tx.objectStore('registros').delete(id); tx.oncomplete = res; tx.onerror = rej; }); }
+    async function limpiarBD() { const db = await openDB(); return new Promise((res, rej) => { const tx = db.transaction('registros', 'readwrite'); tx.objectStore('registros').clear(); tx.oncomplete = res; tx.onerror = rej; }); }
+    async function guardarBorradorBD(borrador) { const db = await openDB(); return new Promise((res, rej) => { const tx = db.transaction('borrador', 'readwrite'); tx.objectStore('borrador').put({id: 'draft_activo', data: borrador}); tx.oncomplete = res; tx.onerror = rej; }); }
+    async function obtenerBorradorBD() { const db = await openDB(); return new Promise((res, rej) => { const tx = db.transaction('borrador', 'readonly'); const req = tx.objectStore('borrador').get('draft_activo'); req.onsuccess = () => res(req.result ? req.result.data : null); req.onerror = rej; }); }
+    async function eliminarBorradorBD() { const db = await openDB(); return new Promise((res, rej) => { const tx = db.transaction('borrador', 'readwrite'); tx.objectStore('borrador').delete('draft_activo'); tx.oncomplete = res; tx.onerror = rej; }); }
 
     // --- AUTO-LOCK DE SEGURIDAD ---
-    let autoLockTimer;
-    let visibilityTimeout;
-    const AUTO_LOCK_TIME = 180000; 
-
-    function resetAutoLock() {
-        clearTimeout(autoLockTimer);
-        autoLockTimer = setTimeout(lockApp, AUTO_LOCK_TIME);
-    }
-
-    function lockApp() {
-        if(document.getElementById('login-screen').style.display === 'none') {
-            document.getElementById('app-content').style.display = 'none';
-            document.getElementById('login-screen').style.opacity = '1';
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('pin-input').value = '';
-            showToast('🔒 Sesión bloqueada por inactividad');
-        }
-    }
-
+    let autoLockTimer; let visibilityTimeout; const AUTO_LOCK_TIME = 180000; 
+    function resetAutoLock() { clearTimeout(autoLockTimer); autoLockTimer = setTimeout(lockApp, AUTO_LOCK_TIME); }
+    function lockApp() { if(document.getElementById('login-screen').style.display === 'none') { document.getElementById('app-content').style.display = 'none'; document.getElementById('login-screen').style.opacity = '1'; document.getElementById('login-screen').style.display = 'flex'; document.getElementById('pin-input').value = ''; showToast('🔒 Sesión bloqueada por inactividad'); } }
     ['touchstart', 'mousemove', 'keypress', 'scroll', 'click'].forEach(evt => document.addEventListener(evt, resetAutoLock, {passive: true}));
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-            visibilityTimeout = setTimeout(lockApp, 15000);
-        } else {
-            clearTimeout(visibilityTimeout);
-            resetAutoLock();
-        }
-    });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { visibilityTimeout = setTimeout(lockApp, 15000); } else { clearTimeout(visibilityTimeout); resetAutoLock(); } });
 
     // --- MOTOR UNIVERSAL DE MODALES ---
     function confirmarAccion(titulo, mensaje, textoAccion, colorAccion, callback) {
@@ -465,188 +384,106 @@
         document.getElementById('um-mensaje').innerText = mensaje;
         const btnCancel = document.getElementById('um-btn-cancelar');
         const btnAccion = document.getElementById('um-btn-accion');
-
-        btnAccion.innerText = textoAccion;
-        btnAccion.style.background = colorAccion;
+        btnAccion.innerText = textoAccion; btnAccion.style.background = colorAccion;
         modal.style.display = 'flex';
-
         btnCancel.onclick = () => { modal.style.display = 'none'; resetAutoLock(); };
         btnAccion.onclick = () => { modal.style.display = 'none'; callback(); resetAutoLock(); };
     }
 
     async function verificarPIN() { 
         const inputHash = await hashSHA256(document.getElementById('pin-input').value);
-        if(inputHash === localStorage.getItem('pin_hash')) { 
-            document.getElementById('login-screen').style.opacity = '0'; 
-            setTimeout(accederApp, 400); 
-        } else { 
-            document.getElementById('login-error').style.display = 'block'; 
-            document.getElementById('pin-input').value = ''; 
-        } 
+        if(inputHash === localStorage.getItem('pin_hash')) { document.getElementById('login-screen').style.opacity = '0'; setTimeout(accederApp, 400); } else { document.getElementById('login-error').style.display = 'block'; document.getElementById('pin-input').value = ''; } 
     }
     
+    // --- MOTOR BIOMÉTRICO WEBAUTHN (GRADO PRODUCCIÓN V8.2) ---
+    async function intentarBiometria() {
+        if (!window.PublicKeyCredential) { showToast("❌ Biometría no soportada por el navegador."); return; }
+
+        try {
+            const hasCredential = localStorage.getItem('hgv_credential_id');
+
+            if (!hasCredential) {
+                // Fase de Registro Inicial
+                confirmarAccion('🔒 Configuración Biométrica', 'No hay huellas asociadas al sistema HGV. ¿Desea vincular el lector de huellas de su CUBOT ahora?', 'Vincular Huella', '#27ae60', async () => {
+                    try {
+                        const challenge = new Uint8Array(32); crypto.getRandomValues(challenge);
+                        const userID = new Uint8Array(16); crypto.getRandomValues(userID);
+
+                        const credential = await navigator.credentials.create({
+                            publicKey: {
+                                challenge: challenge,
+                                rp: { name: "Auditoría HGV", id: window.location.hostname },
+                                user: { id: userID, name: "tecnico_laparoscopia", displayName: "Técnico HGV" },
+                                pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+                                authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+                                timeout: 60000
+                            }
+                        });
+
+                        const rawIdArray = Array.from(new Uint8Array(credential.rawId));
+                        const rawIdBase64 = btoa(String.fromCharCode.apply(null, rawIdArray));
+                        localStorage.setItem('hgv_credential_id', rawIdBase64);
+                        showToast("✔ Huella vinculada exitosamente. Toque HUELLA de nuevo para entrar.");
+                    } catch (regError) { showToast("❌ Cancelado o fallo de hardware."); }
+                });
+                return;
+            }
+
+            // Fase de Validación (Login normal)
+            const challenge = new Uint8Array(32); crypto.getRandomValues(challenge);
+            const rawIdBase64 = localStorage.getItem('hgv_credential_id');
+            const binaryString = atob(rawIdBase64);
+            const credentialId = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) { credentialId[i] = binaryString.charCodeAt(i); }
+
+            const assertion = await navigator.credentials.get({
+                publicKey: {
+                    challenge: challenge,
+                    rpId: window.location.hostname,
+                    allowCredentials: [{ type: "public-key", id: credentialId }],
+                    userVerification: "required",
+                    timeout: 60000
+                }
+            });
+
+            if (assertion) {
+                document.getElementById('login-screen').style.opacity = '0';
+                setTimeout(accederApp, 400);
+            }
+        } catch (err) { console.error(err); showToast("❌ Huella no reconocida. Use el PIN."); }
+    }
+
+    // Modal de Recuperación y Ajustes
     let recoveryStage = 0;
     function abrirRecuperacion() { document.getElementById('recovery-modal').style.display = 'flex'; document.getElementById('recovery-word-input').style.display = 'block'; document.getElementById('new-pin-section').style.display = 'none'; document.getElementById('btn-recovery-action').innerText = "Validar Palabra"; document.getElementById('recovery-error').style.display = 'none'; document.getElementById('recovery-word-input').value = ''; recoveryStage = 0; }
     function cerrarRecuperacion() { document.getElementById('recovery-modal').style.display = 'none'; }
-    async function validarRecuperacion() {
-        const errorMsg = document.getElementById('recovery-error');
-        if(recoveryStage === 0) { 
-            const intentoHash = await hashSHA256(document.getElementById('recovery-word-input').value); 
-            if(intentoHash === localStorage.getItem('palabra_hash')) { 
-                document.getElementById('recovery-word-input').style.display = 'none'; document.getElementById('new-pin-section').style.display = 'block'; document.getElementById('btn-recovery-action').innerText = "Guardar Nuevo PIN"; errorMsg.style.display = 'none'; recoveryStage = 1; 
-            } else { errorMsg.innerText = "Palabra Incorrecta."; errorMsg.style.display = 'block'; }
-        } else { 
-            const nuevoPin = document.getElementById('new-pin-recovery').value; 
-            if(nuevoPin.length >= 4) { 
-                localStorage.setItem('pin_hash', await hashSHA256(nuevoPin)); 
-                showToast("PIN actualizado de forma segura."); cerrarRecuperacion(); 
-            } else { errorMsg.innerText = "El PIN debe tener 4 números."; errorMsg.style.display = 'block'; } 
-        }
-    }
+    async function validarRecuperacion() { const errorMsg = document.getElementById('recovery-error'); if(recoveryStage === 0) { const intentoHash = await hashSHA256(document.getElementById('recovery-word-input').value); if(intentoHash === localStorage.getItem('palabra_hash')) { document.getElementById('recovery-word-input').style.display = 'none'; document.getElementById('new-pin-section').style.display = 'block'; document.getElementById('btn-recovery-action').innerText = "Guardar Nuevo PIN"; errorMsg.style.display = 'none'; recoveryStage = 1; } else { errorMsg.innerText = "Palabra Incorrecta."; errorMsg.style.display = 'block'; } } else { const nuevoPin = document.getElementById('new-pin-recovery').value; if(nuevoPin.length >= 4) { localStorage.setItem('pin_hash', await hashSHA256(nuevoPin)); showToast("PIN actualizado de forma segura."); cerrarRecuperacion(); } else { errorMsg.innerText = "El PIN debe tener 4 números."; errorMsg.style.display = 'block'; } } }
     async function cambiarPIN() { const p = document.getElementById('ajustes-nuevo-pin').value; if(p.length >= 4) { localStorage.setItem('pin_hash', await hashSHA256(p)); showToast("✔ PIN Encriptado y Guardado"); document.getElementById('ajustes-nuevo-pin').value=''; } else showToast("❌ El PIN debe tener 4 dígitos"); }
     async function guardarPalabra() { const w = document.getElementById('ajustes-palabra').value; if(w.length >= 3) { localStorage.setItem('palabra_hash', await hashSHA256(w)); showToast("✔ Palabra Encriptada y Guardada"); document.getElementById('ajustes-palabra').value=''; } else showToast("❌ Palabra muy corta"); }
     
-    async function intentarBiometria() { try { if (!window.PublicKeyCredential) throw new Error("No biometría"); await navigator.credentials.get({ publicKey: { challenge: new Uint8Array(32), timeout: 60000 } }); document.getElementById('login-screen').style.opacity = '0'; setTimeout(accederApp, 400); } catch (err) { alert("Huella no disponible. Usa el PIN."); } }
     document.getElementById('pin-input').addEventListener('keypress', e => { if (e.key === 'Enter') verificarPIN(); });
     
-    function obtenerFechaEstandar() {
-        const today = new Date();
-        const dd = String(today.getDate()).padStart(2, '0');
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const yyyy = today.getFullYear();
-        return `${dd}-${mm}-${yyyy}`;
-    }
+    function obtenerFechaEstandar() { const today = new Date(); const dd = String(today.getDate()).padStart(2, '0'); const mm = String(today.getMonth() + 1).padStart(2, '0'); const yyyy = today.getFullYear(); return `${dd}-${mm}-${yyyy}`; }
+    function comprimirImagen(file, callback) { const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; let width = img.width; let height = img.height; if (width > MAX_WIDTH) { height = height * (MAX_WIDTH / width); width = MAX_WIDTH; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.7)); }; img.src = e.target.result; }; reader.readAsDataURL(file); }
 
-    function comprimirImagen(file, callback) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800;
-                let width = img.width; let height = img.height;
-                if (width > MAX_WIDTH) { height = height * (MAX_WIDTH / width); width = MAX_WIDTH; }
-                canvas.width = width; canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                callback(canvas.toDataURL('image/jpeg', 0.7));
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    async function accederApp() { 
-        document.getElementById('login-screen').style.display = 'none'; 
-        document.getElementById('app-content').style.display = 'block'; 
-        document.getElementById('fecha').value = obtenerFechaEstandar(); 
-        initCanvas('c1'); initCanvas('c2'); 
-        cargarPerfil(); 
-        cargarHistorialVisual(); 
-        await cargarBorradorAutomatico(); 
-        resetAutoLock(); 
-    }
+    async function accederApp() { document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-content').style.display = 'block'; document.getElementById('fecha').value = obtenerFechaEstandar(); initCanvas('c1'); initCanvas('c2'); cargarPerfil(); cargarHistorialVisual(); await cargarBorradorAutomatico(); resetAutoLock(); }
     
     function switchView(viewName, element) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById('view-' + viewName).classList.add('active'); element.classList.add('active'); if(viewName === 'history') cargarHistorialVisual(); window.scrollTo({ top: 0, behavior: 'smooth' }); resetAutoLock(); }
     function showToast(message) { const toast = document.getElementById("toast"); toast.innerText = message; toast.className = "show"; setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000); }
     
-    document.getElementById('curp').addEventListener('input', function(e) {
-        let curp = e.target.value.toUpperCase(); e.target.value = curp;
-        if(curp.length >= 10) {
-            let yy = parseInt(curp.substring(4, 6)); let mm = parseInt(curp.substring(6, 8)); let dd = parseInt(curp.substring(8, 10));
-            if(mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) {
-                let centuryChar = curp.length >= 17 ? curp.charAt(16) : null;
-                let fullYear = yy + (centuryChar && /[A-Z]/.test(centuryChar) ? 2000 : 1900);
-                let birth = new Date(fullYear, mm - 1, dd); let today = new Date();
-                let age = today.getFullYear() - birth.getFullYear(); let m = today.getMonth() - birth.getMonth();
-                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) { age--; }
-                document.getElementById('edad').value = age; guardarBorradorAutomatico();
-            }
-        } else { document.getElementById('edad').value = ''; }
-    });
+    document.getElementById('curp').addEventListener('input', function(e) { let curp = e.target.value.toUpperCase(); e.target.value = curp; if(curp.length >= 10) { let yy = parseInt(curp.substring(4, 6)); let mm = parseInt(curp.substring(6, 8)); let dd = parseInt(curp.substring(8, 10)); if(mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) { let centuryChar = curp.length >= 17 ? curp.charAt(16) : null; let fullYear = yy + (centuryChar && /[A-Z]/.test(centuryChar) ? 2000 : 1900); let birth = new Date(fullYear, mm - 1, dd); let today = new Date(); let age = today.getFullYear() - birth.getFullYear(); let m = today.getMonth() - birth.getMonth(); if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) { age--; } document.getElementById('edad').value = age; guardarBorradorAutomatico(); } } else { document.getElementById('edad').value = ''; } });
+    document.querySelectorAll('#view-form input:not([type="file"]), #view-form select, #view-form textarea').forEach(input => { input.addEventListener('input', guardarBorradorAutomatico); });
 
-    document.querySelectorAll('#view-form input:not([type="file"]), #view-form select, #view-form textarea').forEach(input => {
-        input.addEventListener('input', guardarBorradorAutomatico);
-    });
-
-    function calcularEstancia() {
-        let llegada = document.getElementById('ads-llegada').value;
-        let salida = document.getElementById('ads-salida').value;
-        if(llegada && salida) {
-            let [h1, m1] = llegada.split(':').map(Number);
-            let [h2, m2] = salida.split(':').map(Number);
-            let min1 = h1 * 60 + m1;
-            let min2 = h2 * 60 + m2;
-            if(min2 < min1) min2 += 1440;
-            document.getElementById('ads-estancia').value = min2 - min1;
-            guardarBorradorAutomatico();
-        }
-    }
-    document.getElementById('ads-llegada').addEventListener('change', calcularEstancia);
-    document.getElementById('ads-salida').addEventListener('change', calcularEstancia);
+    function calcularEstancia() { let llegada = document.getElementById('ads-llegada').value; let salida = document.getElementById('ads-salida').value; if(llegada && salida) { let [h1, m1] = llegada.split(':').map(Number); let [h2, m2] = salida.split(':').map(Number); let min1 = h1 * 60 + m1; let min2 = h2 * 60 + m2; if(min2 < min1) min2 += 1440; document.getElementById('ads-estancia').value = min2 - min1; guardarBorradorAutomatico(); } }
+    document.getElementById('ads-llegada').addEventListener('change', calcularEstancia); document.getElementById('ads-salida').addEventListener('change', calcularEstancia);
     
-    function guardarBorradorAutomatico() { 
-        const inputs = document.querySelectorAll('#view-form input:not([type="file"]), #view-form select, #view-form textarea'); 
-        const borrador = {}; 
-        inputs.forEach(input => { borrador[input.id] = input.type === 'checkbox' ? input.checked : input.value; }); 
-        guardarBorradorBD(borrador); 
-    }
-
-    async function cargarBorradorAutomatico() { 
-        const borrador = await obtenerBorradorBD();
-        if (borrador) { 
-            for (const key in borrador) { 
-                const element = document.getElementById(key); 
-                if (element && key !== 'nombre-tecnico' && key !== 'fecha') { 
-                    if (element.type === 'checkbox') element.checked = borrador[key]; 
-                    else element.value = borrador[key]; 
-                } 
-            } 
-            if(document.getElementById('t-listo').value !== '') { document.getElementById('t-listo').style.color = '#27ae60'; document.getElementById('t-listo').style.fontWeight = 'bold'; }
-            if(document.getElementById('t-inicio').value !== '') { document.getElementById('t-inicio').style.color = '#2980b9'; document.getElementById('t-inicio').style.fontWeight = 'bold'; }
-            if(document.getElementById('t-fin').value !== '') { document.getElementById('t-fin').style.color = '#c0392b'; document.getElementById('t-fin').style.fontWeight = 'bold'; }
-        } 
-    }
+    function guardarBorradorAutomatico() { const inputs = document.querySelectorAll('#view-form input:not([type="file"]), #view-form select, #view-form textarea'); const borrador = {}; inputs.forEach(input => { borrador[input.id] = input.type === 'checkbox' ? input.checked : input.value; }); guardarBorradorBD(borrador); }
+    async function cargarBorradorAutomatico() { const borrador = await obtenerBorradorBD(); if (borrador) { for (const key in borrador) { const element = document.getElementById(key); if (element && key !== 'nombre-tecnico' && key !== 'fecha') { if (element.type === 'checkbox') element.checked = borrador[key]; else element.value = borrador[key]; } } if(document.getElementById('t-listo').value !== '') { document.getElementById('t-listo').style.color = '#27ae60'; document.getElementById('t-listo').style.fontWeight = 'bold'; } if(document.getElementById('t-inicio').value !== '') { document.getElementById('t-inicio').style.color = '#2980b9'; document.getElementById('t-inicio').style.fontWeight = 'bold'; } if(document.getElementById('t-fin').value !== '') { document.getElementById('t-fin').style.color = '#c0392b'; document.getElementById('t-fin').style.fontWeight = 'bold'; } } }
     
-    function validarRelojHardware() {
-        if (new Date().getFullYear() < 2026) {
-            showToast("❌ ALERTA: Reloj de dispositivo desincronizado. Verifique la fecha y hora.");
-            return false;
-        }
-        return true;
-    }
-
-    function marcarHoraListo() { 
-        if(!validarRelojHardware()) return;
-        const el = document.getElementById('t-listo'); 
-        if(el.value !== '') { showToast("Sello de tiempo bloqueado."); return; }
-        const now = new Date(); 
-        el.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); 
-        el.style.color='#27ae60'; el.style.fontWeight='bold'; 
-        guardarBorradorAutomatico(); 
-    }
-
-    function marcarHoraInicio() { 
-        if(!validarRelojHardware()) return;
-        if(document.getElementById('t-listo').value === '') { showToast("❌ Faltó marcar Llegada (Técnico Listo) primero."); return; }
-        const el = document.getElementById('t-inicio'); 
-        if(el.value !== '') { showToast("Sello de Inicio bloqueado."); return; }
-        const now = new Date(); 
-        el.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); 
-        el.style.color='#2980b9'; el.style.fontWeight='bold'; 
-        guardarBorradorAutomatico(); 
-    }
-
-    function marcarHoraFin() { 
-        if(!validarRelojHardware()) return;
-        if(document.getElementById('t-inicio').value === '') { showToast("❌ Faltó marcar 'Inicio Cirugía' primero."); return; }
-        const el = document.getElementById('t-fin'); 
-        if(el.value !== '') { showToast("Sello de Fin bloqueado."); return; }
-        const now = new Date(); 
-        el.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); 
-        el.style.color='#c0392b'; el.style.fontWeight='bold'; 
-        guardarBorradorAutomatico(); 
-    }
+    function validarRelojHardware() { if (new Date().getFullYear() < 2026) { showToast("❌ ALERTA: Reloj desincronizado."); return false; } return true; }
+    function marcarHoraListo() { if(!validarRelojHardware()) return; const el = document.getElementById('t-listo'); if(el.value !== '') { showToast("Sello bloqueado."); return; } const now = new Date(); el.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); el.style.color='#27ae60'; el.style.fontWeight='bold'; guardarBorradorAutomatico(); }
+    function marcarHoraInicio() { if(!validarRelojHardware()) return; if(document.getElementById('t-listo').value === '') { showToast("❌ Marque Llegada primero."); return; } const el = document.getElementById('t-inicio'); if(el.value !== '') { showToast("Sello bloqueado."); return; } const now = new Date(); el.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); el.style.color='#2980b9'; el.style.fontWeight='bold'; guardarBorradorAutomatico(); }
+    function marcarHoraFin() { if(!validarRelojHardware()) return; if(document.getElementById('t-inicio').value === '') { showToast("❌ Marque Inicio primero."); return; } const el = document.getElementById('t-fin'); if(el.value !== '') { showToast("Sello bloqueado."); return; } const now = new Date(); el.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); el.style.color='#c0392b'; el.style.fontWeight='bold'; guardarBorradorAutomatico(); }
     
     function cargarPerfil() { const perfil = JSON.parse(localStorage.getItem('bitacora_perfil')) || { nombre: "Jesús Abraham Aguilar Osorio", cargo: "Técnico de Laparoscopia", foto: "" }; document.getElementById('perfil-nombre').value = perfil.nombre; document.getElementById('perfil-cargo').value = perfil.cargo; if(perfil.foto) document.getElementById('profile-img').src = perfil.foto; document.getElementById('nombre-tecnico').value = perfil.nombre; document.getElementById('lbl-cargo-tecnico').innerText = perfil.cargo; document.getElementById('footer-autoria').innerText = `Sistema de Auditoría Operativa - Propiedad de ${perfil.nombre}`; document.getElementById('login-author-text').innerText = `Autor: ${perfil.nombre}`; if(localStorage.getItem('theme_dark') === 'true') { document.body.classList.add('dark-mode'); document.getElementById('toggle-dark').checked = true; } if(localStorage.getItem('theme_night') === 'true') { document.body.classList.add('night-light'); document.getElementById('toggle-night').checked = true; } }
     function guardarPerfil() { const perfil = { nombre: document.getElementById('perfil-nombre').value || "Jesús Abraham Aguilar Osorio", cargo: document.getElementById('perfil-cargo').value || "Técnico de Laparoscopia", foto: document.getElementById('profile-img').src }; localStorage.setItem('bitacora_perfil', JSON.stringify(perfil)); cargarPerfil(); showToast("✔ Perfil Guardado"); }
@@ -660,39 +497,13 @@
     
     async function guardarYGenerarPDF() {
         if(!document.getElementById('paciente').value) { alert("Ingrese nombre del paciente."); return; }
-        
-        const adsNoEntro = document.getElementById('ads-no-entro').checked;
-        const adsLlegada = document.getElementById('ads-llegada').value;
-        const adsSalida = document.getElementById('ads-salida').value;
-
-        if (!adsNoEntro) {
-            if (!adsLlegada || !adsSalida) {
-                showToast("❌ Bloqueo Forense: Registre Llegada y Salida del Adscrito, o marque que NO ingresó a sala.");
-                return;
-            }
-        }
-        
-        let obs = document.getElementById('observaciones').value;
-        const rawState = {}; 
+        const adsNoEntro = document.getElementById('ads-no-entro').checked; const adsLlegada = document.getElementById('ads-llegada').value; const adsSalida = document.getElementById('ads-salida').value;
+        if (!adsNoEntro) { if (!adsLlegada || !adsSalida) { showToast("❌ Bloqueo: Registre Llegada y Salida del Adscrito."); return; } }
+        let obs = document.getElementById('observaciones').value; const rawState = {}; 
         document.querySelectorAll('#view-form input:not([type="file"]), #view-form select, #view-form textarea').forEach(input => { rawState[input.id] = input.type === 'checkbox' ? input.checked : input.value; });
-        rawState['c1_base64'] = document.getElementById('c1').toDataURL(); 
-        rawState['c2_base64'] = document.getElementById('c2').toDataURL();
-        
-        const nuevoRegistro = { 
-            id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : new Date().getTime().toString(), 
-            timestamp: Date.now(),
-            fecha: obtenerFechaEstandar(), 
-            paciente: document.getElementById('paciente').value, 
-            edad: document.getElementById('edad').value, 
-            curp: document.getElementById('curp').value, 
-            causa: document.getElementById('causa').value, 
-            ads_no_entro: adsNoEntro ? 'SI' : 'NO', 
-            observaciones: obs, 
-            raw_data: rawState 
-        };
-
+        rawState['c1_base64'] = document.getElementById('c1').toDataURL(); rawState['c2_base64'] = document.getElementById('c2').toDataURL();
+        const nuevoRegistro = { id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : new Date().getTime().toString(), timestamp: Date.now(), fecha: obtenerFechaEstandar(), paciente: document.getElementById('paciente').value, edad: document.getElementById('edad').value, curp: document.getElementById('curp').value, causa: document.getElementById('causa').value, ads_no_entro: adsNoEntro ? 'SI' : 'NO', observaciones: obs, raw_data: rawState };
         await guardarRegistroBD(nuevoRegistro);
-        
         const element = document.getElementById('contenido-pdf'); window.scrollTo(0, 0); 
         const wasDark = document.body.classList.contains('dark-mode'); if(wasDark) document.body.classList.remove('dark-mode');
         const originalStyles = { w: element.style.width, maxW: element.style.maxWidth, shadow: element.style.boxShadow, p: element.style.padding };
@@ -700,203 +511,41 @@
         document.querySelectorAll('.btn-limpiar, .btn-del-foto, .file-wrapper').forEach(b => b.style.display = 'none');
         const opt = { margin: 0.2, filename: `Auditoria_HGV_${obtenerFechaEstandar()}_${document.getElementById('paciente').value.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 800 }, jsPDF: { unit: 'in', format: 'legal', orientation: 'portrait' } };
         showToast("Generando PDF Oficial...");
-        html2pdf().set(opt).from(element).save().then(() => {
-            element.style.width = originalStyles.w; element.style.maxWidth = originalStyles.maxW; element.style.boxShadow = originalStyles.shadow; element.style.padding = originalStyles.p;
-            document.querySelectorAll('.btn-limpiar, .file-wrapper').forEach(b => b.style.display = 'inline-block'); document.querySelectorAll('.btn-del-foto').forEach(b => b.style.display = 'block');
-            if(wasDark) document.body.classList.add('dark-mode'); 
-            eliminarBorradorBD(); 
-            showToast("✔ Registro Guardado en Base de Datos");
-        });
+        html2pdf().set(opt).from(element).save().then(() => { element.style.width = originalStyles.w; element.style.maxWidth = originalStyles.maxW; element.style.boxShadow = originalStyles.shadow; element.style.padding = originalStyles.p; document.querySelectorAll('.btn-limpiar, .file-wrapper').forEach(b => b.style.display = 'inline-block'); document.querySelectorAll('.btn-del-foto').forEach(b => b.style.display = 'block'); if(wasDark) document.body.classList.add('dark-mode'); eliminarBorradorBD(); showToast("✔ Registro Guardado en Base de Datos"); });
     }
 
     function iniciarLimpiezaBlindada() {
-        const tListoActual = document.getElementById('t-listo').value;
-        const tInicioActual = document.getElementById('t-inicio').value;
-        const tFinActual = document.getElementById('t-fin').value;
-        
-        const modal = document.getElementById('limpieza-modal');
-        const titulo = document.getElementById('lm-titulo');
-        const mensaje = document.getElementById('lm-mensaje');
-        const btnCancel = document.getElementById('lm-btn-cancelar');
-        const btnAccion = document.getElementById('lm-btn-accion');
-
-        modal.style.display = 'flex';
-        titulo.innerText = '⚠️ Nueva Cirugía';
-        mensaje.innerText = '¿Desea limpiar el formulario para un nuevo paciente?';
-        btnCancel.innerText = 'Cancelar';
-        btnAccion.innerText = 'Limpiar';
-        btnAccion.style.background = '#e74c3c'; 
-
+        const tListoActual = document.getElementById('t-listo').value; const tInicioActual = document.getElementById('t-inicio').value; const tFinActual = document.getElementById('t-fin').value;
+        const modal = document.getElementById('limpieza-modal'); const titulo = document.getElementById('lm-titulo'); const mensaje = document.getElementById('lm-mensaje'); const btnCancel = document.getElementById('lm-btn-cancelar'); const btnAccion = document.getElementById('lm-btn-accion');
+        modal.style.display = 'flex'; titulo.innerText = '⚠️ Nueva Cirugía'; mensaje.innerText = '¿Desea limpiar el formulario para un nuevo paciente?'; btnCancel.innerText = 'Cancelar'; btnAccion.innerText = 'Limpiar'; btnAccion.style.background = '#e74c3c'; 
         btnCancel.onclick = () => { modal.style.display = 'none'; resetAutoLock(); };
-
         btnAccion.onclick = () => {
             if(tListoActual !== "" || tInicioActual !== "" || tFinActual !== "") {
-                titulo.innerText = '🛡️ Protección de Tiempos';
-                mensaje.innerText = 'Se han detectado sellos de tiempo bloqueados en el formulario.\n\n¿Desea MANTENER estas horas para el siguiente paciente o destruir todo el registro?';
-                btnCancel.innerText = 'Mantener Tiempos';
-                btnCancel.style.background = '#27ae60'; 
-                btnCancel.style.color = 'white';
-                btnAccion.innerText = 'Borrar Todo';
-                btnAccion.style.background = '#c0392b'; 
-
+                titulo.innerText = '🛡️ Protección de Tiempos'; mensaje.innerText = 'Hay sellos bloqueados.\n\n¿MANTENER estas horas o borrar todo?';
+                btnCancel.innerText = 'Mantener Tiempos'; btnCancel.style.background = '#27ae60'; btnCancel.style.color = 'white'; btnAccion.innerText = 'Borrar Todo'; btnAccion.style.background = '#c0392b'; 
                 btnCancel.onclick = () => { ejecutarLimpiezaDOM(true); modal.style.display = 'none'; btnCancel.style.background = '#95a5a6'; resetAutoLock(); };
                 btnAccion.onclick = () => { ejecutarLimpiezaDOM(false); modal.style.display = 'none'; btnCancel.style.background = '#95a5a6'; resetAutoLock(); };
-            } else {
-                ejecutarLimpiezaDOM(false);
-                modal.style.display = 'none';
-                resetAutoLock();
-            }
+            } else { ejecutarLimpiezaDOM(false); modal.style.display = 'none'; resetAutoLock(); }
         };
     }
 
     function ejecutarLimpiezaDOM(mantenerHora) {
-        const tListoActual = document.getElementById('t-listo').value;
-        const tInicioActual = document.getElementById('t-inicio').value;
-        const tFinActual = document.getElementById('t-fin').value;
-
+        const tListoActual = document.getElementById('t-listo').value; const tInicioActual = document.getElementById('t-inicio').value; const tFinActual = document.getElementById('t-fin').value;
         document.querySelectorAll('input[type="text"]:not(#fecha):not(#nombre-tecnico), input[type="time"], input[type="number"], textarea').forEach(i => i.value = ''); 
-        document.getElementById('ads-no-entro').checked = false; 
-        document.getElementById('causa').selectedIndex = 0; 
-        
-        if (mantenerHora) {
-            document.getElementById('t-listo').value = tListoActual;
-            document.getElementById('t-inicio').value = tInicioActual;
-            document.getElementById('t-fin').value = tFinActual;
-        } else {
-            document.getElementById('t-listo').style.color = ''; 
-            document.getElementById('t-listo').style.fontWeight = 'normal'; 
-            document.getElementById('t-inicio').style.color = '';
-            document.getElementById('t-inicio').style.fontWeight = 'normal';
-            document.getElementById('t-fin').style.color = '';
-            document.getElementById('t-fin').style.fontWeight = 'normal';
-        }
-
-        borrarFoto(); limpiar(1); limpiar(2); window.scrollTo(0,0); 
-        eliminarBorradorBD(); 
-        if (mantenerHora) guardarBorradorAutomatico();
-        
-        showToast(mantenerHora ? "Datos borrados. Tiempos Conservados." : "Formulario totalmente limpio.");
+        document.getElementById('ads-no-entro').checked = false; document.getElementById('causa').selectedIndex = 0; 
+        if (mantenerHora) { document.getElementById('t-listo').value = tListoActual; document.getElementById('t-inicio').value = tInicioActual; document.getElementById('t-fin').value = tFinActual; } 
+        else { document.getElementById('t-listo').style.color = ''; document.getElementById('t-listo').style.fontWeight = 'normal'; document.getElementById('t-inicio').style.color = ''; document.getElementById('t-inicio').style.fontWeight = 'normal'; document.getElementById('t-fin').style.color = ''; document.getElementById('t-fin').style.fontWeight = 'normal'; }
+        borrarFoto(); limpiar(1); limpiar(2); window.scrollTo(0,0); eliminarBorradorBD(); 
+        if (mantenerHora) guardarBorradorAutomatico(); showToast(mantenerHora ? "Datos borrados. Tiempos Conservados." : "Formulario totalmente limpio.");
     }
 
-    async function cargarHistorialVisual() {
-        const data = await obtenerRegistrosBD(); 
-        const container = document.getElementById('lista-historial');
-        if(data.length === 0) { container.innerHTML = "<div class='empty-state'>Aún no hay registros en la base de datos local.</div>"; return; }
-        container.innerHTML = "";
-        data.forEach((r) => {
-            const card = document.createElement('div'); card.className = 'record-card';
-            card.innerHTML = `<h3>👤 ${r.paciente} ${r.edad ? '('+r.edad+' años)' : ''}</h3><p><strong>Fecha:</strong> ${r.fecha} | <strong>Causa:</strong> ${r.causa}</p>
-                <div class="record-actions"><button class="btn-edit-record" onclick="editarRegistroIndividual('${r.id}')">✏️ Editar</button><button class="btn-delete-record" onclick="borrarRegistroIndividual('${r.id}')">🗑️ Borrar</button></div>`;
-            container.appendChild(card);
-        });
-    }
-
-    function editarRegistroIndividual(id) {
-        confirmarAccion('✏️ Editar Registro', '¿Cargar este registro en el formulario principal para corregirlo?', 'Cargar Registro', '#f39c12', async () => {
-            const registros = await obtenerRegistrosBD();
-            const record = registros.find(r => r.id === id);
-            
-            if(record && record.raw_data) { 
-                for (const key in record.raw_data) { 
-                    const el = document.getElementById(key); 
-                    if(el && key !== 'fecha' && key !== 'nombre-tecnico') { 
-                        if(el.type === 'checkbox') el.checked = record.raw_data[key]; 
-                        else el.value = record.raw_data[key]; 
-                    } 
-                } 
-                if(record.raw_data.c1_base64) { const img1 = new Image(); img1.onload = () => { limpiar(1); document.getElementById('c1').getContext('2d').drawImage(img1, 0, 0); }; img1.src = record.raw_data.c1_base64; }
-                if(record.raw_data.c2_base64) { const img2 = new Image(); img2.onload = () => { limpiar(2); document.getElementById('c2').getContext('2d').drawImage(img2, 0, 0); }; img2.src = record.raw_data.c2_base64; }
-                
-                if(document.getElementById('t-listo').value !== '') { document.getElementById('t-listo').style.color = '#27ae60'; document.getElementById('t-listo').style.fontWeight = 'bold'; }
-                if(document.getElementById('t-inicio').value !== '') { document.getElementById('t-inicio').style.color = '#2980b9'; document.getElementById('t-inicio').style.fontWeight = 'bold'; }
-                if(document.getElementById('t-fin').value !== '') { document.getElementById('t-fin').style.color = '#c0392b'; document.getElementById('t-fin').style.fontWeight = 'bold'; }
-            }
-            
-            await borrarRegistroBD(id);
-            guardarBorradorAutomatico(); 
-            switchView('form', document.querySelectorAll('.nav-item')[0]); 
-            showToast("Registro cargado. Sellos de tiempo bloqueados.");
-        });
-    }
-
-    function borrarRegistroIndividual(id) { 
-        confirmarAccion('🗑️ Borrar Registro', '¿Está completamente seguro que desea borrar este registro de forma permanente?', 'Eliminar', '#e74c3c', async () => {
-            await borrarRegistroBD(id);
-            cargarHistorialVisual(); 
-            showToast("Registro eliminado de la base de datos.");
-        });
-    }
-    
-    async function exportarCSV() {
-        const data = await obtenerRegistrosBD(); 
-        if(data.length === 0) { showToast("❌ No hay registros para exportar"); return; }
-        
-        let csv = "ID_Cirugia,Fecha,Paciente,Edad,CURP,Hora_Listo,Hora_Inicio,Hora_Fin,Llegada_Adscrito,Salida_Adscrito,Estancia_Adscrito_Min,Causa_Desviacion,Adscrito_Ausente,Observaciones\n"; 
-        
-        data.forEach(r => { 
-            const rd = r.raw_data || {};
-            const tListo = rd['t-listo'] || '';
-            const tInicio = rd['t-inicio'] || '';
-            const tFin = rd['t-fin'] || '';
-            const adsLlegada = rd['ads-llegada'] || '';
-            const adsSalida = rd['ads-salida'] || '';
-            const adsEstancia = rd['ads-estancia'] || '';
-            
-            const pacSaneado = `"${r.paciente || ''}"`;
-            const obsSaneada = `"${r.observaciones ? r.observaciones.replace(/"/g, '""') : ''}"`;
-
-            csv += `${r.id},${r.fecha},${pacSaneado},${r.edad||''},${r.curp},${tListo},${tInicio},${tFin},${adsLlegada},${adsSalida},${adsEstancia},${r.causa},${r.ads_no_entro},${obsSaneada}\n`; 
-        });
-        
-        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'}); 
-        const url = URL.createObjectURL(blob); 
-        const a = document.createElement('a'); 
-        a.href = url; 
-        a.download = `Auditoria_HGV_Data_${obtenerFechaEstandar()}.csv`; 
-        a.click(); 
-        URL.revokeObjectURL(url); 
-        showToast("✔ Excel Forense Exportado");
-    }
-
-    async function exportarBackupJSON() { 
-        const data = await obtenerRegistrosBD();
-        if(data.length === 0) { showToast("❌ Base de datos vacía"); return; } 
-        const blob = new Blob([JSON.stringify(data)], {type: 'application/json'}); 
-        const url = URL.createObjectURL(blob); 
-        const a = document.createElement('a'); a.href = url; a.download = `Respaldo_HGV_${obtenerFechaEstandar()}.json`; a.click(); 
-        URL.revokeObjectURL(url); showToast("✔ Respaldo Exportado"); 
-    }
-    
-    document.getElementById('import-json').addEventListener('change', function(e) { 
-        const file = e.target.files[0]; if(!file) return; 
-        const reader = new FileReader(); 
-        reader.onload = function(event) { 
-            try { 
-                const importedData = JSON.parse(event.target.result); 
-                if(Array.isArray(importedData)) { 
-                    confirmarAccion('📥 Importar Respaldo', `Se encontraron ${importedData.length} registros.\n¿Desea combinarlos con su historial actual de forma segura?`, 'Combinar', '#27ae60', async () => {
-                        const currentData = await obtenerRegistrosBD();
-                        const currentIds = new Set(currentData.map(r => r.id));
-                        const nuevosRegistros = importedData.filter(r => r.id ? !currentIds.has(r.id) : true);
-                        
-                        for(const r of nuevosRegistros) { await guardarRegistroBD(r); }
-
-                        cargarHistorialVisual(); showToast(`✔ ${nuevosRegistros.length} Registros Importados`); 
-                    });
-                } else { throw new Error("Formato inválido"); } 
-            } catch(error) { showToast("❌ Archivo JSON no válido"); } 
-            document.getElementById('import-json').value = ''; 
-        }; 
-        reader.readAsText(file); 
-    });
-    
-    function borrarTodoHistorial() { 
-        confirmarAccion('⚠️ ALERTA DE DESTRUCCIÓN', 'Está a punto de borrar TODA la base de datos de auditoría.\n\nEsta acción es irreversible y destruirá todas sus evidencias locales.', 'Formatear', '#c0392b', async () => {
-            await limpiarBD();
-            cargarHistorialVisual(); 
-            showToast("Base de datos formateada por completo.");
-        });
-    }
+    async function cargarHistorialVisual() { const data = await obtenerRegistrosBD(); const container = document.getElementById('lista-historial'); if(data.length === 0) { container.innerHTML = "<div class='empty-state'>Aún no hay registros en la base de datos local.</div>"; return; } container.innerHTML = ""; data.forEach((r) => { const card = document.createElement('div'); card.className = 'record-card'; card.innerHTML = `<h3>👤 ${r.paciente} ${r.edad ? '('+r.edad+' años)' : ''}</h3><p><strong>Fecha:</strong> ${r.fecha} | <strong>Causa:</strong> ${r.causa}</p> <div class="record-actions"><button class="btn-edit-record" onclick="editarRegistroIndividual('${r.id}')">✏️ Editar</button><button class="btn-delete-record" onclick="borrarRegistroIndividual('${r.id}')">🗑️ Borrar</button></div>`; container.appendChild(card); }); }
+    function editarRegistroIndividual(id) { confirmarAccion('✏️ Editar Registro', '¿Cargar este registro en el formulario principal para corregirlo?', 'Cargar Registro', '#f39c12', async () => { const registros = await obtenerRegistrosBD(); const record = registros.find(r => r.id === id); if(record && record.raw_data) { for (const key in record.raw_data) { const el = document.getElementById(key); if(el && key !== 'fecha' && key !== 'nombre-tecnico') { if(el.type === 'checkbox') el.checked = record.raw_data[key]; else el.value = record.raw_data[key]; } } if(record.raw_data.c1_base64) { const img1 = new Image(); img1.onload = () => { limpiar(1); document.getElementById('c1').getContext('2d').drawImage(img1, 0, 0); }; img1.src = record.raw_data.c1_base64; } if(record.raw_data.c2_base64) { const img2 = new Image(); img2.onload = () => { limpiar(2); document.getElementById('c2').getContext('2d').drawImage(img2, 0, 0); }; img2.src = record.raw_data.c2_base64; } if(document.getElementById('t-listo').value !== '') { document.getElementById('t-listo').style.color = '#27ae60'; document.getElementById('t-listo').style.fontWeight = 'bold'; } if(document.getElementById('t-inicio').value !== '') { document.getElementById('t-inicio').style.color = '#2980b9'; document.getElementById('t-inicio').style.fontWeight = 'bold'; } if(document.getElementById('t-fin').value !== '') { document.getElementById('t-fin').style.color = '#c0392b'; document.getElementById('t-fin').style.fontWeight = 'bold'; } } await borrarRegistroBD(id); guardarBorradorAutomatico(); switchView('form', document.querySelectorAll('.nav-item')[0]); showToast("Registro cargado. Sellos de tiempo bloqueados."); }); }
+    function borrarRegistroIndividual(id) { confirmarAccion('🗑️ Borrar Registro', '¿Está completamente seguro que desea borrar este registro de forma permanente?', 'Eliminar', '#e74c3c', async () => { await borrarRegistroBD(id); cargarHistorialVisual(); showToast("Registro eliminado de la base de datos."); }); }
+    async function exportarCSV() { const data = await obtenerRegistrosBD(); if(data.length === 0) { showToast("❌ No hay registros para exportar"); return; } let csv = "ID_Cirugia,Fecha,Paciente,Edad,CURP,Hora_Listo,Hora_Inicio,Hora_Fin,Llegada_Adscrito,Salida_Adscrito,Estancia_Adscrito_Min,Causa_Desviacion,Adscrito_Ausente,Observaciones\n"; data.forEach(r => { const rd = r.raw_data || {}; const tListo = rd['t-listo'] || ''; const tInicio = rd['t-inicio'] || ''; const tFin = rd['t-fin'] || ''; const adsLlegada = rd['ads-llegada'] || ''; const adsSalida = rd['ads-salida'] || ''; const adsEstancia = rd['ads-estancia'] || ''; const pacSaneado = `"${r.paciente || ''}"`; const obsSaneada = `"${r.observaciones ? r.observaciones.replace(/"/g, '""') : ''}"`; csv += `${r.id},${r.fecha},${pacSaneado},${r.edad||''},${r.curp},${tListo},${tInicio},${tFin},${adsLlegada},${adsSalida},${adsEstancia},${r.causa},${r.ads_no_entro},${obsSaneada}\n`; }); const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Auditoria_HGV_Data_${obtenerFechaEstandar()}.csv`; a.click(); URL.revokeObjectURL(url); showToast("✔ Excel Forense Exportado"); }
+    async function exportarBackupJSON() { const data = await obtenerRegistrosBD(); if(data.length === 0) { showToast("❌ Base de datos vacía"); return; } const blob = new Blob([JSON.stringify(data)], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Respaldo_HGV_${obtenerFechaEstandar()}.json`; a.click(); URL.revokeObjectURL(url); showToast("✔ Respaldo Exportado"); }
+    document.getElementById('import-json').addEventListener('change', function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(event) { try { const importedData = JSON.parse(event.target.result); if(Array.isArray(importedData)) { confirmarAccion('📥 Importar Respaldo', `Se encontraron ${importedData.length} registros.\n¿Desea combinarlos con su historial actual de forma segura?`, 'Combinar', '#27ae60', async () => { const currentData = await obtenerRegistrosBD(); const currentIds = new Set(currentData.map(r => r.id)); const nuevosRegistros = importedData.filter(r => r.id ? !currentIds.has(r.id) : true); for(const r of nuevosRegistros) { await guardarRegistroBD(r); } cargarHistorialVisual(); showToast(`✔ ${nuevosRegistros.length} Registros Importados`); }); } else { throw new Error("Formato inválido"); } } catch(error) { showToast("❌ Archivo JSON no válido"); } document.getElementById('import-json').value = ''; }; reader.readAsText(file); });
+    function borrarTodoHistorial() { confirmarAccion('⚠️ ALERTA DE DESTRUCCIÓN', 'Está a punto de borrar TODA la base de datos de auditoría.\n\nEsta acción es irreversible y destruirá todas sus evidencias locales.', 'Formatear', '#c0392b', async () => { await limpiarBD(); cargarHistorialVisual(); showToast("Base de datos formateada por completo."); }); }
 </script>
 </body>
 </html>
