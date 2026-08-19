@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hgv-auditoria-v8-1-enterprise';
+const CACHE_NAME = 'hgv-auditoria-v8-2-enterprise';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
