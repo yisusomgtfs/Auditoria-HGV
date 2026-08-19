@@ -76,17 +76,63 @@ button:active {
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        #login-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1a252f; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff; transition: opacity 0.5s ease; }
-        #login-screen h1 { margin-bottom: 5px; text-transform: uppercase; font-size: 1.5em; text-align: center; animation: slideUpFade 0.6s ease; }
-        #login-screen p { color: #bdc3c7; margin-bottom: 20px; font-size: 0.8em; text-align: center; animation: slideUpFade 0.7s ease; }
-        .pin-input { font-size: 2em; padding: 10px; width: 150px; text-align: center; letter-spacing: 5px; border-radius: 5px; border: none; margin-bottom: 15px; color: #000; outline: none; transition: box-shadow 0.3s; animation: slideUpFade 0.8s ease; }
-        .pin-input:focus { box-shadow: 0 0 15px rgba(52, 152, 219, 0.5); }
-        .btn-group-login { display: flex; gap: 10px; animation: slideUpFade 0.9s ease; }
-        .btn-login, .btn-bio { color: #fff; border: none; padding: 15px 25px; font-size: 1.1em; font-weight: bold; border-radius: 5px; cursor: pointer; transition: transform 0.2s, background 0.3s; }
-        .btn-login { background: #2980b9; } .btn-bio { background: #27ae60; }
-        .btn-login:active, .btn-bio:active { transform: scale(0.95); }
-        .btn-forgot { background: transparent; color: #bdc3c7; border: none; margin-top: 20px; text-decoration: underline; cursor: pointer; font-size: 0.85em; animation: slideUpFade 1s ease; }
-        #login-error { color: #e74c3c; margin-top: 15px; font-weight: bold; display: none; animation: fadeIn 0.3s ease; }
+       #login-screen { 
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+    background: #1a252f; z-index: 99999; display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; color: #fff; transition: opacity 0.5s ease; 
+}
+
+/* --- ANIMACIÓN FORMAL: FOCO DE PRECISIÓN --- */
+#login-screen h1 { 
+    margin-bottom: 5px; text-transform: uppercase; font-size: 1.5em; 
+    text-align: center; 
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: fadeInPrecision 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+#login-screen p { 
+    color: #bdc3c7; margin-bottom: 20px; font-size: 0.8em; 
+    text-align: center; 
+    opacity: 0;
+    animation: fadeIn 1s ease-in 0.5s forwards;
+}
+
+@keyframes fadeInPrecision {
+    0% { opacity: 0; transform: translateY(-10px); letter-spacing: -2px; }
+    100% { opacity: 1; transform: translateY(0); letter-spacing: normal; }
+}
+
+/* --- RESTO DEL LOGIN --- */
+.pin-input { 
+    font-size: 2em; padding: 10px; width: 150px; text-align: center; 
+    letter-spacing: 5px; border-radius: 5px; border: none; margin-bottom: 15px; 
+    color: #000; outline: none; transition: box-shadow 0.3s; animation: slideUpFade 0.8s ease; 
+}
+.pin-input:focus { box-shadow: 0 0 15px rgba(52, 152, 219, 0.5); }
+
+.btn-group-login { display: flex; gap: 10px; animation: slideUpFade 0.9s ease; }
+
+/* --- BOTONES ESTILO INDUSTRIAL/GHOST --- */
+.btn-login, .btn-bio { 
+    color: #fff; padding: 15px 25px; font-size: 1.1em; 
+    font-weight: bold; border-radius: 5px; cursor: pointer; 
+    transition: transform 0.2s, background 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important; 
+    background: transparent !important; 
+    backdrop-filter: blur(5px);
+}
+.btn-login:active, .btn-bio:active { 
+    transform: scale(0.95); 
+    background: rgba(255,255,255,0.1) !important; 
+}
+
+.btn-forgot { 
+    background: transparent; color: #bdc3c7; border: none; margin-top: 20px; 
+    text-decoration: underline; cursor: pointer; font-size: 0.85em; animation: slideUpFade 1s ease; 
+}
+#login-error { color: #e74c3c; margin-top: 15px; font-weight: bold; display: none; animation: fadeIn 0.3s ease; }
+
 
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 100000; display: none; justify-content: center; align-items: center; animation: fadeIn 0.3s ease; }
         .modal-content { background: #fff; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px; text-align: center; color: #333; animation: slideUpFade 0.4s ease; }
