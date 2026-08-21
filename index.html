@@ -232,6 +232,13 @@ button:active {
         #toast.show { visibility: visible; animation: toastFadeIn 0.5s, toastFadeOut 0.5s 2.5s; }
         @keyframes toastFadeIn { from {bottom: 0; opacity: 0;} to {bottom: calc(80px + env(safe-area-inset-bottom)); opacity: 1;} }
         @keyframes toastFadeOut { from {bottom: calc(80px + env(safe-area-inset-bottom)); opacity: 1;} to {bottom: 0; opacity: 0;} }
+/* Expansión de celda para la CURP en el PDF */
+#curp {
+    width: 100% !important;
+    min-width: 220px !important;
+    letter-spacing: 1px;
+    font-size: 0.9em; /* Reduce ligeramente el tamaño para asegurar que quepan los 18 caracteres */
+}
     </style>
 </head>
 <body>
